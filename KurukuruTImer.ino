@@ -1,10 +1,13 @@
 //サーボライブラリ
 #include <Servo.h>
+//累乗計算のためのmath.h
 #include <math.h>
+//抵抗は７セグが1kΩ,圧電スピーカーが200Ω
 //ボタンピン const←後で値変更できない
 const int BTN_SELECT_PIN = 12;
 const int BTN_DONE_PIN = 13;
 const int SPEAKER_PIN = 3;
+//7セグ用,a~dpまでは7セグの特定位置に該当
 const int a = 7;
 const int b = 6;
 const int c = 5;
@@ -21,8 +24,8 @@ const int dp = 4;
 const int SERVO_PIN = 2;
 //サーボのインスタンス
 Servo servo;
-//ボタン入力の値代入用変数
-int time_select = 0;
+
+
 
 
 //スタート音再生用
@@ -77,7 +80,6 @@ void endsound() {
   delay(600);
   tone(SPEAKER_PIN, 523, 1000);//ドー
   delay(300);
-
 }
 
 
@@ -87,7 +89,6 @@ void display1(void)
 {
   digitalWrite(b, HIGH);
   digitalWrite(c, HIGH);
-
 }
 //display E
 void displayE(void)
@@ -106,8 +107,6 @@ void displayF(void)
   digitalWrite(f, HIGH);
   digitalWrite(g, HIGH);
   digitalWrite(e, HIGH);
-
-
 }
 
 //display S
@@ -118,7 +117,6 @@ void displayS(void)
   digitalWrite(g, HIGH);
   digitalWrite(c, HIGH);
   digitalWrite(d, HIGH);
-
 }
 //display A
 void displayA(void)
@@ -130,27 +128,21 @@ void displayA(void)
   digitalWrite(f, HIGH);
   digitalWrite(g, HIGH);
   digitalWrite(e, HIGH);
-  digitalWrite(dp, HIGH);
-
 }
 //display C
 void displayC(void)
 {
   digitalWrite(a, HIGH);
-  digitalWrite(b, HIGH);
-  digitalWrite(c, HIGH);
+  digitalWrite(d, HIGH);
   digitalWrite(e, HIGH);
   digitalWrite(f, HIGH);
   digitalWrite(g, HIGH);
   digitalWrite(e, HIGH);
-
-
 }
 //display dp
 void displaydp(void)
 {
   digitalWrite(dp, HIGH);
-
 }
 //display number2
 void display2(void)
@@ -245,18 +237,15 @@ void display0(void)
   digitalWrite(f, HIGH);
 }
 void displayClear(void) {
-  digitalWrite(a, HIGH);
-  digitalWrite(b, HIGH);
-  digitalWrite(c, HIGH);
-  digitalWrite(d, HIGH);
-  digitalWrite(e, HIGH);
-  digitalWrite(f, HIGH);
-  digitalWrite(g, HIGH);
-  digitalWrite(dp, HIGH);
+  digitalWrite(a, LOW);
+  digitalWrite(b, LOW);
+  digitalWrite(c, LOW);
+  digitalWrite(d, LOW);
+  digitalWrite(e, LOW);
+  digitalWrite(f, LOW);
+  digitalWrite(g, LOW);
+  digitalWrite(dp, LOW);
 }
-
-
-
 //1桁セグメントLEDGER表示用ここまで----------------------------------------
 
 
@@ -269,16 +258,15 @@ int btn_record(void) {
   int value;
   int time_count;
   int  time_decide = 60000;
+  //ボタン入力の値代入用変数
+  int time_select = 0;
 
-  //20秒ループするはず
+  //10秒ループ
   for (time_count = 0; time_count < 100 ; time_count++) {
-
-
     //ボタン読み取り
     value = digitalRead( BTN_SELECT_PIN );
     //出力(シリアルモニタ)
     Serial.println( value );
-
     //変数代入 スイッチ押されると0になるので
     if (value == 0) {
       time_select += 1;
@@ -286,7 +274,10 @@ int btn_record(void) {
 
       Serial.println("add");
       Serial.println( time_select );
+      //ボタン押した回数でモード変更
+      displayClear();
       switch (time_select) {
+        //case0は押さなかった場合
         case 0:
           //60分
           display6();
@@ -313,18 +304,17 @@ int btn_record(void) {
           break;
         default:
           //１分
-          display1();
+          displayA();
           //          time_decide = 60000;
           time_decide = 6;
           break;
-
       }
-
     }
-
     delay(100);
   }
-  displayC;
+  displayClear();
+
+  //  displayC;
   return time_decide;
 }
 
@@ -332,17 +322,16 @@ int btn_record(void) {
 //サーボ動作用
 void run_servo(int time_decided) {
   Serial.println("start run_servo");
-  displayClear();
-  displaydp();
+
   double waru;
-    Serial.println("selected_time");
-    Serial.println(time_decided * pow(10, 4));
+  Serial.println("selected_time");
+  Serial.println(time_decided * pow(10, 4));
   waru = time_decided * pow(10, 4) / 180;
   Serial.println("strat_timer");
-   Serial.println(waru);
-  for (int time_diff = 180; time_diff > 0; time_diff--) {
+  Serial.println(waru);
+  for (int time_diff = 180; time_diff > 0; time_diff -= 2) {
     servo.write(time_diff);
-    delay(waru);
+    delay(waru * 2);
 
   }
 
@@ -359,33 +348,33 @@ void setup() {
   //サーボモーターを動かす
   servo.attach(SERVO_PIN);
   servo.write(0);
-  servo.write(45);
   delay(1000);
-  servo.write(0);
-
-
 
   //ボタン関係の準備
   pinMode( BTN_SELECT_PIN, INPUT_PULLUP );
   pinMode( BTN_DONE_PIN, INPUT_PULLUP );
   //↑INPUT_PULLUP引数に入れるだけで、抵抗不要で安定化できる！
+
   //シリアルモニタ準備
   Serial.begin( 9600 );
   Serial.println( "serial start" );
+
   //起動音＋起動確認数字表示
   int test;
   test = btn_record();
+  delay(2000);
   Serial.println( "runned btn_record" );
   Serial.println(test);
+  displayClear;
+  delay(1000);
+  displaydp;
   run_servo(test);
   Serial.println( "runned run_servo" );
-
+  displayClear();
   displayE();
   endsound();
-
+  displayClear();
 }
 
 void loop() {
-
-
 }
