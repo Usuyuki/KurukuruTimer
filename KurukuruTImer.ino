@@ -1,5 +1,6 @@
 //サーボライブラリ
 #include <Servo.h>
+#include <math.h>
 //ボタンピン const←後で値変更できない
 const int BTN_SELECT_PIN = 12;
 const int BTN_DONE_PIN = 13;
@@ -26,13 +27,15 @@ int time_select = 0;
 
 //スタート音再生用
 void startsound(void) {
-  tone(SPEAKER_PIN, 330, 600);//ミ-
-  delay(600);
+  tone(SPEAKER_PIN, 392, 300);//ソ
+  delay(300);
+  tone(SPEAKER_PIN, 349, 300);//ファ
+  delay(300);
 }
 
 //選択音再生用
 void selectsound(void) {
-  tone(SPEAKER_PIN, 392, 300);//ソ
+  tone(SPEAKER_PIN, 330, 300);//ミ
   delay(300);
 }
 //終了音再生用
@@ -103,7 +106,7 @@ void displayF(void)
   digitalWrite(f, HIGH);
   digitalWrite(g, HIGH);
   digitalWrite(e, HIGH);
-  
+
 
 }
 
@@ -113,7 +116,8 @@ void displayS(void)
   digitalWrite(a, HIGH);
   digitalWrite(f, HIGH);
   digitalWrite(g, HIGH);
-  digitalWrite(e, HIGH);
+  digitalWrite(c, HIGH);
+  digitalWrite(d, HIGH);
 
 }
 //display A
@@ -139,6 +143,12 @@ void displayC(void)
   digitalWrite(f, HIGH);
   digitalWrite(g, HIGH);
   digitalWrite(e, HIGH);
+
+
+}
+//display dp
+void displaydp(void)
+{
   digitalWrite(dp, HIGH);
 
 }
@@ -234,7 +244,16 @@ void display0(void)
   digitalWrite(e, HIGH);
   digitalWrite(f, HIGH);
 }
-
+void displayClear(void) {
+  digitalWrite(a, HIGH);
+  digitalWrite(b, HIGH);
+  digitalWrite(c, HIGH);
+  digitalWrite(d, HIGH);
+  digitalWrite(e, HIGH);
+  digitalWrite(f, HIGH);
+  digitalWrite(g, HIGH);
+  digitalWrite(dp, HIGH);
+}
 
 
 
@@ -245,64 +264,82 @@ void display0(void)
 
 //ボタン読み取り→代入関数
 int btn_record(void) {
+  Serial.println("start btn_record");
+  displayS;//セレクトしてのS
   int value;
   int time_count;
-  int time_decide;
-  displayS;//セレクトしてのS
-  //ボタン読み取り
-  value = digitalRead( BTN_SELECT_PIN );
-  //出力(シリアルモニタ)
-  Serial.println( value );
-  for (time_count = 0; time_count < 300 ; time_count++) {
+  int  time_decide = 60000;
+
+  //20秒ループするはず
+  for (time_count = 0; time_count < 100 ; time_count++) {
+
+
+    //ボタン読み取り
+    value = digitalRead( BTN_SELECT_PIN );
+    //出力(シリアルモニタ)
+    Serial.println( value );
+
     //変数代入 スイッチ押されると0になるので
     if (value == 0) {
       time_select += 1;
-      displayC();
       selectsound();
+
       Serial.println("add");
       Serial.println( time_select );
       switch (time_select) {
         case 0:
-          //10分 ↓はミリ秒で送る
-          time_decide = 600000;
-          display1();
+          //60分
+          display6();
+          //          time_decide = 3600000;
+          time_decide = 360;
           break;
         case 1:
           //30分
-          time_decide = 1800000;
           display3();
+          //          time_decide = 1800000;
+          time_decide = 180;
           break;
         case 2:
-          //60分
-          display6();
-          time_decide = 3600000;
+          //10分 ↓はミリ秒で送る
+          display1();
+          //          time_decide = 600000;
+          time_decide = 60;
           break;
         case 3:
           //90分
           display9();
-          time_decide = 5400000;
+          //          time_decide = 5400000;
+          time_decide = 540;
           break;
         default:
           //１分
-          displayA();
-          time_decide = 60000;
+          display1();
+          //          time_decide = 60000;
+          time_decide = 6;
           break;
 
       }
-      selectsound();
+
     }
 
     delay(100);
   }
-
+  displayC;
   return time_decide;
 }
 
 
 //サーボ動作用
 void run_servo(int time_decided) {
+  Serial.println("start run_servo");
+  displayClear();
+  displaydp();
   double waru;
-  waru = time_decided / 180;
+    Serial.println("selected_time");
+    Serial.println(time_decided * pow(10, 4));
+  waru = time_decided * pow(10, 4) / 180;
+  Serial.println("strat_timer");
+   Serial.println(waru);
   for (int time_diff = 180; time_diff > 0; time_diff--) {
     servo.write(time_diff);
     delay(waru);
@@ -315,25 +352,33 @@ void run_servo(int time_decided) {
 
 //初期化関数
 void setup() {
-  //サーボモーターを初期位置に
+  //起動表示
+  displayF();
+  startsound();
+
+  //サーボモーターを動かす
   servo.attach(SERVO_PIN);
+  servo.write(0);
   servo.write(45);
   delay(1000);
-  //起動オン
-    displayF();
-  startsound();
-  
   servo.write(0);
+
+
+
   //ボタン関係の準備
   pinMode( BTN_SELECT_PIN, INPUT_PULLUP );
   pinMode( BTN_DONE_PIN, INPUT_PULLUP );
   //↑INPUT_PULLUP引数に入れるだけで、抵抗不要で安定化できる！
   //シリアルモニタ準備
   Serial.begin( 9600 );
+  Serial.println( "serial start" );
   //起動音＋起動確認数字表示
-
-  int btn_record_;
-  run_servo(btn_record());
+  int test;
+  test = btn_record();
+  Serial.println( "runned btn_record" );
+  Serial.println(test);
+  run_servo(test);
+  Serial.println( "runned run_servo" );
 
   displayE();
   endsound();
