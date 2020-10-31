@@ -68,7 +68,7 @@ void endsound() {
   delay(300);
   tone(SPEAKER_PIN, 494, 300);//シ
   delay(300);
-  tone(SPEAKER_PIN, 440, 600);//ラー
+  tone(SPEAKER_PIN, 440, 500);//ラー
   delay(600);
   tone(SPEAKER_PIN, 698, 300);//ファ
   delay(300);
