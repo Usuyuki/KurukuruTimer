@@ -261,6 +261,12 @@ int btn_record(void) {
   //ボタン入力の値代入用変数
   int time_select = 0;
 
+  //初期値(case0)
+  //60分
+  display6();
+  //          time_decide = 3600000;
+  time_decide = 360;
+
   //10秒ループ
   for (time_count = 0; time_count < 100 ; time_count++) {
     //ボタン読み取り
@@ -268,6 +274,7 @@ int btn_record(void) {
     //出力(シリアルモニタ)
     Serial.println( value );
     //変数代入 スイッチ押されると0になるので
+
     if (value == 0) {
       time_select += 1;
       selectsound();
@@ -279,10 +286,8 @@ int btn_record(void) {
       switch (time_select) {
         //case0は押さなかった場合
         case 0:
-          //60分
-          display6();
-          //          time_decide = 3600000;
-          time_decide = 360;
+          
+
           break;
         case 1:
           //30分
